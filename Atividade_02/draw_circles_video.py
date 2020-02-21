@@ -19,6 +19,8 @@ import auxiliar as aux
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+img_logo = cv2.imread("insper.jpg")
+img_logo = cv2.cvtColor(img_logo, cv2.COLOR_BGR2RGB)
 
 lower = 0
 upper = 1
@@ -28,8 +30,14 @@ blue = "#586B7D"
 m1,m2 = np.array([172, 50, 50]), np.array([180, 255, 255])
 b1,b2 = np.array([80, 50, 50]), np.array([110, 255, 255])
 
+# BRISK
+brisk = cv2.BRISK_create()
 font = cv2.FONT_HERSHEY_SIMPLEX
 fontsize = 2
+
+# BRISK no logo INSPER
+kplogo, deslogo = brisk.detectAndCompute(img_logo, None) 
+MIN_MATCH_COUNT = 10
             
 
 # Returns an image containing the borders of the image
@@ -46,6 +54,36 @@ def auto_canny(image, sigma=0.33):
     # return the edged image
     return edged
 
+def find_homography_draw_box(kp1, kp2, img_cena):
+    
+    out = img_cena.copy()
+    
+    src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
+    dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
+
+
+    # Tenta achar uma trasformacao composta de rotacao, translacao e escala que situe uma imagem na outra
+    # Esta transformação é chamada de homografia 
+    # Para saber mais veja 
+    # https://docs.opencv.org/3.4/d9/dab/tutorial_homography.html
+    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+    matchesMask = mask.ravel().tolist()
+
+
+    
+    h,w = img_original.shape
+    # Um retângulo com as dimensões da imagem original
+    pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+
+    # Transforma os pontos do retângulo para onde estao na imagem destino usando a homografia encontrada
+    dst = cv2.perspectiveTransform(pts,M)
+
+
+    # Desenha um contorno em vermelho ao redor de onde o objeto foi encontrado
+    img2b = cv2.polylines(out,[np.int32(dst)],True,(255,255,0),5, cv2.LINE_AA)
+    
+    return img2b
+
 
 
 while(True):
@@ -59,6 +97,26 @@ while(True):
     bordas = auto_canny(blur)
     bordas_color = cv2.cvtColor(bordas, cv2.COLOR_GRAY2BGR)
 
+    # BRISK
+
+    kpframe, desframe = brisk.detectAndCompute(bordas_color,None)
+    
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING)
+
+    matches = bf.knnMatch(deslogo,desframe,k=2)
+
+    good = []
+    for m,n in matches:
+        if m.distance < 0.7*n.distance:
+            good.append(m)
+
+
+    if len(good)>MIN_MATCH_COUNT:
+        # Separa os bons matches na origem e no destino
+        print("Matches found")    
+        framed = find_homography_draw_box(kplogo, kpframe, bordas_color)
+    else:
+        print("Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT))
     # Seleção das imagens por bordas
 
     # frame_mag = cv2.inRange(frame_hsv,m1,m2)
@@ -75,7 +133,7 @@ while(True):
 
     # Deteccção de círculos (Hough Circles)
     circles = None
-    circles=cv2.HoughCircles(bordas,cv2.HOUGH_GRADIENT,2,40,param1=50,param2=100,minRadius=5,maxRadius=60)
+    circles = cv2.HoughCircles(bordas,cv2.HOUGH_GRADIENT,2,40,param1=50,param2=100,minRadius=5,maxRadius=60)
 
     if circles is not None:
         circles = np.uint16(np.around(circles))
