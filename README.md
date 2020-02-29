@@ -4,30 +4,34 @@ ___
 ### Activity 1:
 
 - ####   Part 1:
-    - Brightness equalization
-        Given the grayscale image <img src="Atividade01/RinTinTin.jpg" alt = "RinTinTin Image, low dynamic range">, whose pixel values are not using the full brightness range (0 to 255), how could one go about equalizing its brightness (make full use of the brightness interval)?
+    - Brightness equalization:
+    
+        Given the grayscale image ![RinTinTin Image, low dynamic range](Atividade01/RinTinTin.jpg), whose pixel values are not using the full brightness range (0 to 255), how could one go about equalizing its brightness (make full use of the brightness interval)?
 
 
         My initial take on it, which was rather effective, was to simply linearly interpolate between the current max and min values and 0 and 255. Here's the result.
-        <img src="Atividade01/RinTinEqualized.jpg" alt = "RinTinTin Image, proper dynamic range">
+        ![RinTinTin Image, proper dynamic range](Atividade01/RinTinEqualized.jpg)
 
 - ####   Part 2:
-    - Edge detection
+    - Edge detection:
+        
         How would one go about detecting borders on this image: 
-        <img src="Atividade01/hall_box_battery_atividade3.png" alt = "Some colourful boxes on the floor">
+        ![Some colourful boxes on the floor](Atividade01/hall_box_battery_atividade3.png)
         
         
         The suggested approach was to apply a kernel over every pixel of the image. Mainly, every pixel receives some linear combination of the surrounding pixels of the original image. If you were to apply the kernel in a way, such that every pixel receives the difference between the one on its right, and the one to its left, you would get brighter values on vertical edges due to the quick change of color most edges entail.
+        
         Applying said kernel results in the following:
-        <img src="Atividade01/gabarito_atividade_3.png" alt = "Some colourful boxes on the floor">
+        ![Some colourful boxes on the floor](Atividade01/gabarito_atividade_3.png)
 
 ___
 ### Activity 2:
 
 - ####  Introduction:
+
     In this activity, we could try and use OpenCV for some real-time object detection. For this, some techniques such as BRISK (for pattern recognition), CANNY edge detection, and Houghes circle detection algorithm were employed.
     Given the following piece of paper,
-    <img src="Atividade02/support/folha_atividade.png" alt = "A4 sized image, with one red circle on the left half, and one blue circle opposite it."> 
+    ![A4 sized image, with one red circle on the left half, and one blue circle opposite it.](Atividade02/support/folha_atividade.png) 
     how would one go about: 
         1. Reading a video-feed off of a webcam;
         2. Identifying the circles on the feed, using cv2's inRange() function;
@@ -48,6 +52,6 @@ ___
     - #### Part 5
         Finally, we must detect the text on the paper. I decided to identify it on the paper with a rectangle, but there are other ways of highlighting your matches. What I did here was fairly simple. The BRISK algorithm can detect keypoints in an image, and then with some maths we can compare those keypoints to see if they match up with some from our image.
         Here's the image I used to tell BRISK what to look for:
-        <img src="Atividade02/insper_logo.png" alt = "Image with the text 'INSPER', on a white background">
+        ![Image with the text 'INSPER', on a white background](Atividade02/insper_logo.png)
         And here's how it turned out:
         [![Image recognition with BRISK](https://res.cloudinary.com/marcomontalbano/image/upload/v1582988181/video_to_markdown/images/youtube--sp6DCuY-fw4-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/sp6DCuY-fw4 "Image recognition with BRISK")
