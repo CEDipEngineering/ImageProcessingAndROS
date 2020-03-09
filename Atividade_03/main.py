@@ -3,33 +3,32 @@
 # -*- coding: utf-8 -*-
 
 # __author__      = "Matheus Dib, Fabio de Miranda" ==> Modificado
-__author__ = "Carlos Dip"
+__author__ = "Carlos Dip, João Andrade, Lucas Fukada"
 
 
 # Imports
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
 import time
+import pandas as pd
+from classes import Point, Line
 
-# STATE MACHINE TO CONTROL OUTPUT:
-# ------------------------------------------------
-# ------------------------------------------------
-SHOW_BRISK = 0                                #--- Mostra a captura analisada com BRISK
-SHOW_BASE = 1                                 #--- Mostra somente a captura direta
-SHOW_MAG_MASK = 0                             #--- Mostra a captura da cor magente
-SHOW_BLU_MASK = 0                             #--- Mostra a captura da cor azul
-SHOW_LINES_DIST = 0                           #--- Mostra os círculos, assim como a linha entre os dois, angulo entre eles e a horizontal(graus), e distância entre eles e a câmera(cm)
-SHOW_BITWISE_MAGBLU = 0                       #--- Mostra a junção das máscaras azul e magenta. Não funciona muito bem, mas é interessante.
-# ------------------------------------------------
-# ------------------------------------------------
 
 # Setup webcam video capture
-cap = cv2.VideoCapture("/home/borg/Repos/LearningImageProcessing/Atividade_03")
+cap = cv2.VideoCapture("vid1.mp4")
 time.sleep(1)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
+# Calculates mean line for intersection
+def calculate_mean_line(linhas):
+  first_point_x = int(round(np.mean([linha.point1.x for linha in linhas])))
+  first_point_y = int(round(np.mean([linha.point1.y for linha in linhas])))
+  second_point_x = int(round(np.mean([linha.point2.x for linha in linhas])))
+  second_point_y = int(round(np.mean([linha.point2.y for linha in linhas])))
+  first_point = Point(first_point_x, first_point_y)
+  second_point = Point(second_point_x, second_point_y)
+  return Line(first_point, second_point)
+
+# Canny edge detection
 def auto_canny(image, sigma=0.33):
     # compute the median of the single channel pixel intensities
     v = np.median(image)
@@ -42,75 +41,59 @@ def auto_canny(image, sigma=0.33):
     # return the edged image
     return edged
 
+# Applies white mask for filtering sides of road.
 def treatForLines(frame):
     # Shape detection using color (cv2.inRange masks are applied over orginal image)
-    mask = cv2.inRange(frame,np.array([0,0,0]),np.array([0,0,255]))
-    morphMask = cv2.morphologyEx(mask,cv2.MORPH_CLOSE,np.ones((4, 4)))
+    mask = cv2.inRange(cv2.GaussianBlur(frame,(5,5),0),np.array([30,60,220]),np.array([255,255,255]))
+    morphMask = cv2.morphologyEx(mask,cv2.MORPH_CLOSE,np.ones((6, 6)))
     contornos, arvore = cv2.findContours(morphMask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    frame_out = frame.copy()
-    cv2.drawContours(frame_out, contornos, -1, [0, 0, 255], 3)
+    frame_out = cv2.drawContours(morphMask, contornos, -1, [0, 0, 255], 3)
     return frame_out
 
-
 running = True
+buffering = 5
+lista_goodLeft = [0]*buffering
+lista_goodRight = [0]*buffering
+
 while running:
     ret, frame = cap.read()
     frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    maskedFrame = treatForLines(frame)
+    bordas = auto_canny(maskedFrame)
 
-    if SHOW_LINES_DIST:
+    lines = cv2.HoughLines(bordas, 1, np.pi/180, 180)
+    if lines is not None:
+        for line in lines:
+            for rho, theta in line:
+                a = np.cos(theta)
+                b = np.sin(theta)
+                x0 = a * rho
+                y0 = b * rho
+                pt1 = Point(int(x0 + 1000*(-b)), int(y0 + 1000*(a)))
+                pt2 = Point(int(x0 - 1000*(-b)), int(y0 - 1000*(a)))
+                lin = Line(pt1, pt2)
 
-        # Canny edge detection
-        blur = cv2.GaussianBlur(frame_gray,(7,7),0)
-        bordas = auto_canny(blur)
-        bordas_color = cv2.cvtColor(bordas, cv2.COLOR_GRAY2BGR) # Changed to RGB to be able to draw with color on top.
+                if lin.m < -0.2:
+                    lista_goodLeft.pop(0)
+                    lista_goodLeft.append(lin)
+                elif lin.m > 0.2:
+                    lista_goodRight.pop(0)
+                    lista_goodRight.append(lin)
 
-        # Deteccção de círculos (Hough Circles)
-        circles = None
-        circles = cv2.HoughCircles(bordas,cv2.HOUGH_GRADIENT,2,40,param1=50,param2=100,minRadius=5,maxRadius=60)
+        if 0 not in lista_goodLeft and 0 not in lista_goodRight:
+            average_Left = calculate_mean_line(lista_goodLeft)
+            average_Right =calculate_mean_line(lista_goodRight)
+            a, b = average_Left.getPoints()
+            c, d = average_Right.getPoints()
+            cv2.line(frame, a, b,(255,0,0),2)
+            cv2.line(frame, c, d,(255,0,0),2)
+            inter = average_Left.intersect(average_Right)
+            cv2.circle(frame, inter, 5,(0,255,255), 5)
 
-        if circles is not None:
-            circles = np.uint16(np.around(circles))
-            circ_list = []
-
-            for i in circles[0,:]:
-                
-                # Variáveis auxiliares
-                r,g,b = frame[i[1]][i[0]]
-                h,s,v = frame_hsv[i[1]][i[0]]
-                # print((r,g,b))
-   
-    if SHOW_LINES_DIST:
-
-        # Canny edge detection
-        blur = cv2.GaussianBlur(frame_gray,(7,7),0)
-        bordas = auto_canny(blur)
-        bordas_color = cv2.cvtColor(bordas, cv2.COLOR_GRAY2BGR) # Changed to RGB to be able to draw with color on top.
-
-        # Guarda o centro do círculo atual, e desenha seu centro e contorno
-        circ_list.append((i[0],i[1]))
-        cv2.circle(bordas_color,(i[0],i[1]),i[2]-3,(int(r),int(g),int(b)),6)
-        cv2.circle(bordas_color,(i[0],i[1]),2,(int(r),int(g),int(b)),i[2])
-
-        # Desenha a reta e calcula a distância entre os círculos
-        if len(circ_list) >= 2:
-            cv2.line(bordas_color, circ_list[0], circ_list[1], (255,255,255), 2) # Linha entre círculos
-            dx = np.abs(int(circ_list[0][0]) - int(circ_list[1][0]))
-            dy = np.abs(int(circ_list[0][1]) - int(circ_list[1][1]))
-            dist = float(np.sqrt(dx**2 + dy**2)) # Distância euclideana em pixels (h)
-            real_dist = focus*14/dist # Distância real (D = F*H(14cm)/ h)
-            cv2.putText(bordas_color, "Distance: %.2f" %real_dist, (5,fontsize*30), font, fontsize, (255,255,255))
-            # print(real_dist)
-            angle = np.arctan(dy/dx)*180/np.pi
-            cv2.putText(bordas_color, "Angle: %.4f" %angle, (5,fontsize*60), font, fontsize, (255,255,255))
-            # print(angle)
-
+        
     # Display the resulting frame
-    if SHOW_BASE:
-        cv2.imshow('Detector de circulos',frame)
-    else:
-        cv2.imshow('Detector de circulos',treatForLines(frame))
-
+    cv2.imshow('Detector de circulos',frame)
     # Exit condition
     if cv2.waitKey(1) & 0xFF == ord('q'):
         running = False
