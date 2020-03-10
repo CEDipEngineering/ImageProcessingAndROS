@@ -1,7 +1,7 @@
-## Projects for learning image processing in Pyhton 3.7 with OpenCV 4.
+## Projects for learning image processing and ROS in Pyhton 3.7 with OpenCV 4 and ROSpy.
 
 ___
-### Activity 1:
+### Activity 1; Basic Image processing:
 
 - ####   Part 1:
     - Brightness equalization
@@ -29,7 +29,7 @@ ___
         <img src="images/gabarito_atividade_3.png" width = "400">
 
 ___
-### Activity 2:
+### Activity 2; Live image processing and shape recognition:
 
 - ####  Introduction:
     In this activity, we could try and use OpenCV for some real-time object detection. For this, some techniques such as BRISK (for pattern recognition), CANNY edge detection, and Houghes circle detection algorithm were employed.
@@ -55,19 +55,65 @@ ___
         With the focus of our camera in our hands, all we need is to reverse the maths we used to calculate the focus, to calculate the distance the paper is from the camera. And since we already got the centers for both circles, all we need to do is draw a line and calculate the arctangent of its slope (rise/run or dx/dy), to determine its angle (being careful not to divide by zero when vertical). With the, numbers done, all we need to do is draw them on the screen. 
         [![Lines, distance from camera, and angle](https://res.cloudinary.com/marcomontalbano/image/upload/v1582988062/video_to_markdown/images/youtube--pj15Q1t3WAc-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/pj15Q1t3WAc "Lines, distance from camera, and angle")
 
-    - #### Part 5
+    - #### Part 5:
         Finally, we must detect the text on the paper. I decided to identify it on the paper with a rectangle, but there are other ways of highlighting your matches. What I did here was fairly simple. The BRISK algorithm can detect keypoints in an image, and then with some maths we can compare those keypoints to see if they match up with some from our image.
         Here's the image I used to tell BRISK what to look for:
+
         <img src="images/insper_logo.png">
 
 And here's how it turned out:
         [![Image recognition with BRISK](https://res.cloudinary.com/marcomontalbano/image/upload/v1582988181/video_to_markdown/images/youtube--sp6DCuY-fw4-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/sp6DCuY-fw4 "Image recognition with BRISK")
 
+___
+### Activity 3; Video processing for robot directioning in ROS environment (Gazebo):
 
-[![Robot walks in a square](https://res.cloudinary.com/marcomontalbano/image/upload/v1583789203/video_to_markdown/images/youtube--8R6xdfzpzHo-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/8R6xdfzpzHo "Robot walks in a square")
+In this project I collaborated with: [lucaskf1996](https://github.com/lucaskf1996) and [jpgianfaldoni](https://github.com/jpgianfaldoni).
 
-[![Robot stays in his personal space](https://res.cloudinary.com/marcomontalbano/image/upload/v1583789408/video_to_markdown/images/youtube--5pgBoovNbkU-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/5pgBoovNbkU "Robot stays in his personal space")
+- ####   Part 1: 
+    - Vanishing point of a street-like video;
 
-[![Line detection and intersection using Hough Line Transform](https://res.cloudinary.com/marcomontalbano/image/upload/v1583789685/video_to_markdown/images/youtube--UGZRjutI2kw-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/UGZRjutI2kw "Line detection and intersection using Hough Line Transform")
+        First we were tasked with identifiying the vanishing point of the frames of a video in which there were two parallel lines, much like a normal runway. The idea was to see where the street was leading.
 
-[![MobileNet Deep Learning Person Detection on Webcam](https://res.cloudinary.com/marcomontalbano/image/upload/v1583790607/video_to_markdown/images/youtube--ehDDQbRO5IA-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/ehDDQbRO5IA "MobileNet Deep Learning Person Detection on Webcam")
+        The technique employed was to use a Hough Line transform on each frame, to then be able to intersect said lines, to find the vanishing point. That is, however, much more easier said than done. In the end, we applied a mask for white (much like the mask for magenta, and blue in the previous activity), and after selecting only lines with slopes that were not close to zero, were able to filter out most of the lines we didn't want. 
+
+        Here's how it turned out:
+
+        [![Line detection and intersection using Hough Line Transform](https://res.cloudinary.com/marcomontalbano/image/upload/v1583789685/video_to_markdown/images/youtube--UGZRjutI2kw-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/UGZRjutI2kw "Line detection and intersection using Hough Line Transform")
+
+- ####   Part 2 & 3:
+    - Object detection with A.I.;
+    
+    We were then tasked with starting our study (however superficial) of Deep Learning and Neural Networks, for image analysis. First we started with YOLO (You Only Look Once), a powerhouse deep learning algorithm that can detect people, motorcycle, bananas, and some other whisical objects of day-to-day life. However, it was way too slow to be used on our laptops, and for that reason (mainly), we decided to use another algorithm.
+
+    Enter MobileNet, a neural network that does the same thing as YOLO, athough not as accurately, and with less categories, but much faster. We downloaded a pre-trained model, since training these takes a notorious amount of computing power, and applied to our webcam to detect people. It would be able to detect many more types of objects, but we chose people because they're readily available. 
+
+    Our final task was to make sure that our detection had happend for 5 (or, a certain fixed number) of frames in a row, before displaying the box around the object.
+
+    Here's how it turned out:
+
+    [![MobileNet Neural Network Person Detection on Webcam](https://res.cloudinary.com/marcomontalbano/image/upload/v1583790607/video_to_markdown/images/youtube--ehDDQbRO5IA-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/ehDDQbRO5IA "MobileNet Neural Network Person Detection on Webcam")
+
+- ####   Part 4:
+    - Gazebo
+    
+    In order to simulate the TurtleBot that we're going to be using, we had to familiarize ourselves with the Gazebo toolset. Here's a video of it running.
+
+    [![Gazebo simulator for TurtleBot](https://res.cloudinary.com/marcomontalbano/image/upload/v1583787667/video_to_markdown/images/youtube--SR9bfCALZJ8-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/SR9bfCALZJ8 "Gazebo simulator for TurtleBot")
+
+
+- ####   Part 5 & 6:
+    - Creating routines using ROSpy
+
+    Now, we had to create some routines for our simulated robot. The first one has it roll forward a bit, then turn ninety degrees and repeat, allowing it to walk along the edges of a square. And the second one uses its on-board LYDAR to see the distance of what's in front of it, and then do it's best to oscilate around 1m away from whatever it see directly ahead.
+
+    Here's some video of it working in the simulator:
+
+    [![Robot walks in a square](https://res.cloudinary.com/marcomontalbano/image/upload/v1583789203/video_to_markdown/images/youtube--8R6xdfzpzHo-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/8R6xdfzpzHo "Robot walks in a square")
+
+    [![Robot stays in his personal space](https://res.cloudinary.com/marcomontalbano/image/upload/v1583789408/video_to_markdown/images/youtube--5pgBoovNbkU-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/5pgBoovNbkU "Robot stays in his personal space")
+
+
+
+
+
+
