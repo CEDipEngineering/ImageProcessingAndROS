@@ -113,7 +113,15 @@ In this project I collaborated with: [lucaskf1996](https://github.com/lucaskf199
     [![Robot stays in his personal space](https://res.cloudinary.com/marcomontalbano/image/upload/v1583789408/video_to_markdown/images/youtube--5pgBoovNbkU-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/5pgBoovNbkU "Robot stays in his personal space")
 
 
+___
+### Activity 4; Identifying and approaching a creeper based on its color:
 
+In this project I collaborated with: [lucaskf1996](https://github.com/lucaskf1996) and [jpgianfaldoni](https://github.com/jpgianfaldoni).
 
+The idea was that, given a scenario with 3 creepers with different colors, we had to be able to identify and approach one, based on a color of our choice (the colors available were green, blue and magenta; we chose green)
 
+Most of the apparoach was meant to be guided by the camera, but once the robot got close enough (subjective), he should switch to the laser scanner for guidance.
 
+Here's how it turned out:
+
+[![Identify and approach colored creeper](https://res.cloudinary.com/marcomontalbano/image/upload/v1586195125/video_to_markdown/images/youtube--u5pahK2Tt3E-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://youtu.be/u5pahK2Tt3E "Identify and approach colored creeper")
